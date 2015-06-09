@@ -4,7 +4,8 @@
   "description": " Specify your REST endpoints behaviours like a pro and generate their docs",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover --print details _mocha test -- R spec"
+    "test": "istanbul cover --print detail _mocha -- -R spec test",
+    "coveralls": "cat coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Floby/mocha-rest-interface/issues"
   },
-  "homepage": "https://github.com/Floby/mocha-rest-interface"
+  "homepage": "https://github.com/Floby/mocha-rest-interface",
+  "devDependencies": {
+    "coveralls": "^2.11.2"
+  }
 }
