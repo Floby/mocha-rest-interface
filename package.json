@@ -18,8 +18,9 @@
   },
   "homepage": "https://github.com/Floby/mocha-rest-interface",
   "devDependencies": {
-    "istanbul": "^0.3.14",
-    "coveralls": "^2.11.2"
+    "coveralls": "^2.11.2",
+    "express": "^4.12.4",
+    "istanbul": "^0.3.14"
   },
   "dependencies": {
     "dev": "^0.1.3",
