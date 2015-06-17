@@ -5,31 +5,107 @@
 var Suite = require('mocha/lib/suite')
   , Test = require('mocha/lib/test')
   , utils = require('mocha/lib/utils')
-  , escapeRe = require('escape-string-regexp');
+  , escapeRe = require('escape-string-regexp')
+  , supertest = require('supertest')
+  , assembler = require('url-assembler')
+
 
 /**
- * BDD-style interface:
+ * an API style interface
  *
- *      describe('Array', function(){
- *        describe('#indexOf()', function(){
- *          it('should return -1 when not present', function(){
- *
- *          });
- *
- *          it('should return the index when present', function(){
- *
- *          });
- *        });
- *      });
- *
+ *   api('hello world JS', function () {
+ *     endpoint('/hello', function () {
+ *       method('GET', function () {
+ *         it('says hello', function (done) {
+ *           this.api()
+ *             .expect(200)
+ *             .expect('Hello World!\n')
+ *             .end(done)
+ *         });
+ *       });
+ *     })
+ *   })
  */
 
 module.exports = function(suite){
   var suites = [suite];
 
-  suite.on('pre-require', function(context, file, mocha){
+  suite.on('pre-require', function(context, file, mocha) {
 
     var common = require('mocha/lib/interfaces/common')(suites, context);
+
+    function describe (title, fn) {
+      var suite = Suite.create(suites[0], title);
+      suite.file = file;
+      suites.unshift(suite);
+      fn.call(suite);
+      suites.shift();
+      return suite;
+    }
+
+    context.api = function (title, fn) {
+      var suite = Suite.create(suites[0], title);
+      suite.file = file;
+      suites.unshift(suite);
+
+      suite.ctx._apiName = title;
+      suite.ctx._apiUrl = assembler();
+      suite.ctx.api = ApiHelper();
+      suite.ctx.api.at = function (location) {
+        suite.ctx._apiHost = location;
+      }
+
+
+      fn.call(suite);
+
+      suites.shift();
+      return suite;
+    };
+
+    context.method = function (title, fn) {
+      var method = title;
+      var suite = Suite.create(suites[0], title);
+      suite.file = file;
+      suites.unshift(suite);
+
+      suite.ctx._apiMethod = method.toLowerCase().trim();
+
+      fn.call(suite);
+      suites.shift();
+      return suite;
+    }
+
+    context.endpoint = function (title, fn) {
+      var endpoint = title;
+      var suite = Suite.create(suites[0], title);
+      suite.file = file;
+      suites.unshift(suite);
+
+      suite.ctx._apiUrl = suite.ctx._apiUrl.segment(endpoint);
+
+      fn.call(suite);
+      suites.shift();
+      return suite;
+    }
+
+    context.endpoint = describe;
+
+
+    context.it = context.specify = function(title, fn) {
+      var suite = suites[0];
+      if (suite.pending) fn = null;
+      var test = new Test(title, fn);
+      test.file = file;
+      suite.addTest(test);
+      return test;
+    };
+    context.before = common.before;
+    context.after = common.after;
+    context.beforeEach = common.beforeEach;
+    context.afterEach = common.afterEach;
+
+    /// NOT EXPORTED ///
+    return;
 
     context.before = common.before;
     context.after = common.after;
@@ -114,3 +190,14 @@ module.exports = function(suite){
   });
 };
 
+
+
+function ApiHelper () {
+  return function () {
+    var context = this;
+    var method = context._apiMethod;
+    var host = context._apiHost;
+    if (!host) throw Error('You did not specify where to find your api')
+    return supertest(host)[method]('/hello')
+  }
+}

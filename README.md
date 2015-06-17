@@ -19,6 +19,7 @@ Usage
 
 ```javascript
 api('catalog', function () {
+  this.api.at('http://localhost:3000');
   endpoint('/products', function () {
     method('GET', function () {
       it('lists all available products', function (done) {
@@ -45,6 +46,7 @@ Or, you know...
 
 ```coffeescript
 api 'catalog', ->
+  @api.at 'http://localhost:3000'
   endpoint '/products', ->
     method 'GET', ->
       it 'lists all available products', (done) ->
